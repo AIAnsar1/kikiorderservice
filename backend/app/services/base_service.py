@@ -1,7 +1,7 @@
 from typing import Generic, TypeVar, Dict, Any
 from sqlmodel.ext.asyncio.session import AsyncSession
 from app.repositories.base_repository import BaseRepository
-from app.model.base_model import BaseModel
+from app.models import BaseModel
 
 
 

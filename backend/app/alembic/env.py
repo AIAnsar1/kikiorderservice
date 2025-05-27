@@ -1,8 +1,12 @@
 import os
+import sys
 from logging.config import fileConfig
 
 from alembic import context
 from sqlalchemy import engine_from_config, pool
+
+# Add the parent directory to the Python path
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -14,8 +18,8 @@ fileConfig(config.config_file_name)
 
 # add your model's MetaData object here
 # for 'autogenerate' support
-from app.model.test_model import TestModel  # noqa
-from app.model.base_model import BaseModel  # noqa
+from app.models import TestModel  # noqa
+from app.models import BaseModel  # noqa
 from app.core.config import settings # noqa
 
 target_metadata = BaseModel.metadata

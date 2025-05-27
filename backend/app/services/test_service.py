@@ -1,4 +1,4 @@
-from app.model.test_model import TestModel
+from app.models import TestModel
 from app.repositories.test_repository import TestRepository
 from app.services.base_service import BaseService
 

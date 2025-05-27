@@ -5,7 +5,7 @@ from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload, joinedload
 from sqlalchemy.sql import ColumnElement
 from sqlalchemy.exc import NoResultFound
-from app.model.base_model import BaseModel
+from app.models import BaseModel
 import uuid
 
 T = TypeVar("T", bound=BaseModel)

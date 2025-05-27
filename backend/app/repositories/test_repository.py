@@ -1,4 +1,4 @@
-from app.model.test_model import TestModel
+from app.models import TestModel
 from app.repositories.base_repository import BaseRepository
 from sqlmodel.ext.asyncio.session import AsyncSession
 
