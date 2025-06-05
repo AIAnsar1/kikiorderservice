@@ -1,10 +1,15 @@
 import uuid
 from typing import Any
 
-from sqlmodel import Session, select
+import httpx
+from fastapi import HTTPException
+from sqlalchemy.orm import Session
+from sqlmodel import select
 
+from app.core.config import settings
 from app.core.security import get_password_hash, verify_password
 from app.models import Item, ItemCreate, User, UserCreate, UserUpdate
+from app.models import Order, OrderCreate
 
 
 def create_user(*, session: Session, user_create: UserCreate) -> User:
@@ -52,3 +57,56 @@ def create_item(*, session: Session, item_in: ItemCreate, owner_id: uuid.UUID) -
     session.commit()
     session.refresh(db_item)
     return db_item
+
+
+
+async def create_order(session: Session, data: OrderCreate, user_id: uuid.UUID):
+    # 1. Tariffni tekshirish (mock)
+    async with httpx.AsyncClient() as client:
+        resp = await client.get(f"{settings.TARIFFS_URL}/tariffs/{data.tariff_id}")
+        if resp.status_code != 200 or not resp.json().get("active", True):
+            raise HTTPException(status_code=404, detail="Tariff not found or inactive")
+        tariff = resp.json()
+    # 2. Order yaratish
+    order = Order(
+        passenger_id=user_id,
+        pickup_address=data.pickup.address,
+        pickup_lat=data.pickup.lat,
+        pickup_lon=data.pickup.lon,
+        dropoff_address=data.dropoff.address,
+        dropoff_lat=data.dropoff.lat,
+        dropoff_lon=data.dropoff.lon,
+        payment_method=data.payment_method,
+        status="pending",
+        estimated_price=tariff.get("base_price", 100.0),
+    )
+    session.add(order)
+    session.commit()
+    session.refresh(order)
+    return order
+
+def get_order(session: Session, order_id: uuid.UUID):
+    return session.get(Order, order_id)
+
+def accept_order(session: Session, order_id: uuid.UUID, driver_id: uuid.UUID):
+    order = session.get(Order, order_id)
+    if not order or order.status != "pending":
+        raise HTTPException(status_code=400, detail="Order not pending")
+    order.driver_id = driver_id
+    order.status = "accepted"
+    session.add(order)
+    session.commit()
+    session.refresh(order)
+    return order
+
+def arrive_order(session: Session, order_id: uuid.UUID):
+    order = session.get(Order, order_id)
+    if not order or order.status != "accepted":
+        raise HTTPException(status_code=400, detail="Order not accepted")
+    from datetime import datetime
+    order.status = "arrived"
+    order.arrived_at = datetime.utcnow()
+    session.add(order)
+    session.commit()
+    session.refresh(order)
+    return order

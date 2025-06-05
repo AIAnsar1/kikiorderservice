@@ -2,6 +2,11 @@ import uuid
 
 from pydantic import EmailStr
 from sqlmodel import Field, Relationship, SQLModel
+import uuid
+from sqlmodel import Field, SQLModel
+from typing import Optional
+from decimal import Decimal
+from datetime import datetime
 
 
 # Shared properties
@@ -111,3 +116,52 @@ class TokenPayload(SQLModel):
 class NewPassword(SQLModel):
     token: str
     new_password: str = Field(min_length=8, max_length=40)
+
+
+
+
+class LocationIn(SQLModel):
+    address: str
+    lat: float
+    lon: float
+
+class OrderBase(SQLModel):
+    passenger_id: uuid.UUID
+    driver_id: Optional[uuid.UUID] = None
+    pickup_address: str
+    pickup_lat: float
+    pickup_lon: float
+    dropoff_address: str
+    dropoff_lat: float
+    dropoff_lon: float
+    distance_km: Optional[Decimal] = None
+    estimated_price: Optional[Decimal] = None
+    final_price: Optional[Decimal] = None
+    payment_method: str
+    status: str = "pending"
+    cancel_count: int = 0
+    cancel_reason: Optional[str] = None
+    cancel_by: Optional[str] = None
+
+class Order(OrderBase, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    accepted_at: Optional[datetime] = None
+    arrived_at: Optional[datetime] = None
+    started_at: Optional[datetime] = None
+    completed_at: Optional[datetime] = None
+
+class OrderCreate(SQLModel):
+    pickup: LocationIn
+    dropoff: LocationIn
+    tariff_id: uuid.UUID
+    options: list[uuid.UUID] = []
+    special_tariff_id: Optional[uuid.UUID] = None
+    payment_method: str
+
+class OrderOut(SQLModel):
+    id: uuid.UUID
+    status: str
+    estimated_price: Optional[Decimal]
+    class Config:
+        orm_mode = True

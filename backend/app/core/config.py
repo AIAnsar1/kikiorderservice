@@ -118,3 +118,6 @@ class Settings(BaseSettings):
 
 
 settings = Settings()  # type: ignore
+
+# --- app/core/config.py oxiriga ---
+TARIFFS_URL: str = "http://localhost:9000"
